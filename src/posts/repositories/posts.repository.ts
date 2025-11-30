@@ -1,37 +1,42 @@
 import {Post} from "../types/post";
 import {PostInputDto} from "../dto/post.input-dto";
-import {db} from "../../db/in-memory.db";
+import {postCollection} from "../../db/mongo.bd";
+import {blogCollection} from "../../db/mongo.bd";
+import {ObjectId, WithId} from "mongodb";
 
 export const postsRepository = {
-    findAllPosts(): Post[] {
-        return db.posts;
+    async findAllPosts(): Promise<WithId<Post>[]> {
+        return postCollection.find().toArray();
     },
-    findPostById(id: string): Post | null {
-        return db.posts.find((p: Post) => p.id === id ) ?? null;
+    async findPostById(id: string): Promise<WithId<Post> | null> {
+        return postCollection.findOne({_id: new ObjectId(id)})
     },
-    createPost(newPost: Post): Post {
-        db.posts.push(newPost)
-        return newPost;
+    async createPost(newPost: Post): Promise<WithId<Post>> {
+        const insertPost = await postCollection.insertOne(newPost);
+        return {...newPost, _id: insertPost.insertedId};
     },
-    updatePost(id: string, dto: Post): void {
-        const post: Post | undefined = db.posts.find((p: Post) => p.id === id);
-        if (!post) {
+   async updatePost(id: string, dto: Post): Promise<void> {
+        const updatePostResult = await postCollection.updateOne(
+            {_id: new ObjectId(id)},
+            {
+                $set: {
+                    title: dto.title,
+                    shortDescription: dto.shortDescription,
+                    content: dto.content,
+                    blogId: dto.blogId,
+                }
+            });
+        if (updatePostResult.matchedCount < 1) {
             throw new Error("Post not found.");
         }
-
-        post.title = dto.title;
-        post.shortDescription = dto.shortDescription;
-        post.content = dto.content;
-        post.blogId = dto.blogId;
 
         return;
     },
-    deletePost(id: string): void {
-        const index: number = db.posts.findIndex((p: Post) => p.id === id);
-        if (index === -1) {
+    async deletePost(id: string): Promise<void> {
+        const deletePostResult = await postCollection.deleteOne({_id: new ObjectId(id)});
+        if (deletePostResult.deletedCount < 1) {
             throw new Error("Post not found.");
         }
-        db.posts.splice(index, 1);
         return;
     }
 }
