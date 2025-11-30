@@ -1,14 +1,19 @@
 import express from 'express';
 import { setupApp } from './setup-app';
+import { SETTINGS } from './core/settings/settings';
+import { runDB } from './db/mongo.bd'
 
-const app = express();
-setupApp(app);
+const bootstrap = async () => {
+    const app = express();
+    setupApp(app);
+    const PORT = SETTINGS.PORT;
 
-const PORT = process.env.PORT || 5001;
+    await runDB(SETTINGS.MONGO_URL);
 
-app.listen(PORT, () => {
-    console.log(`Listening on port ${PORT}`);
-    console.log(`Testing endpoint: http://localhost:${PORT}/ht_02/api/testing/all-data`);
-    console.log(`Blogs endpoint: http://localhost:${PORT}/ht_02/api/blogs`);
-    console.log(`Posts endpoint: http://localhost:${PORT}/ht_02/api/posts`);
-})
+    app.listen(PORT, () => {
+        console.log(`Example app listening on port ${PORT}`);
+    });
+    return app;
+};
+
+bootstrap();

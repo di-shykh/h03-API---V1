@@ -10,7 +10,7 @@ export const postsRepository = {
         return db.posts.find((p: Post) => p.id === id ) ?? null;
     },
     createPost(newPost: Post): Post {
-        db.posts.push(newPost);
+        db.posts.push(newPost)
         return newPost;
     },
     updatePost(id: string, dto: Post): void {
