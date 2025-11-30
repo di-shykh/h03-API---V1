@@ -23,6 +23,8 @@ export function createBlogHandler(req: Request<{},{},BlogInputDto>, res: Respons
        name: req.body.name,
        description: req.body.description,
        websiteUrl: req.body.websiteUrl,
+       createdAt: new Date().toISOString(),
+       isMembership: false,
    };
    blogsRepository.createBlog(newBlog);
    res.status(HttpStatus.Created).send(newBlog);

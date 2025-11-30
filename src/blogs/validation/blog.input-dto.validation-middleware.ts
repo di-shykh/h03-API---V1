@@ -24,9 +24,21 @@ const websiteUrlValidation = body("websiteUrl")
         }
         return true;
     });
+const createdAtValidation = body('createdAt')
+    .exists().withMessage("createdAt is required")
+    .isString().withMessage("createdAt should be string")
+    .isISO8601({
+        strict: true,        // Строгая проверка
+        strictSeparator: true // Требует 'T' как разделитель
+    }).withMessage("createdAt should be DateTime in ISOString")
+const isMembershipValidation = body("isMembership")
+    .exists().withMessage("isMembership required")
+    .isBoolean().withMessage("isMembership should be boolean");
 
 export const blogInputDtoValidation = [
     nameValidation,
     descriptionValidation,
     websiteUrlValidation,
+    createdAtValidation,
+    isMembershipValidation,
 ];

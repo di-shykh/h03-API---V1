@@ -21,7 +21,7 @@ const blogIdValidation = body("blogId")
     .exists().withMessage("blogId is required")
     .isString().withMessage("blogId should be string")
     .trim()
-    .isNumeric().withMessage("blogId should be numeric")
+    // .isNumeric().withMessage("blogId should be numeric")
     .custom((id: string): boolean => {
         const blog = blogsRepository.findBlogById(id);
         if (!blog) {
@@ -29,9 +29,17 @@ const blogIdValidation = body("blogId")
         }
         return true;
     });
+const createdAtValidation = body('createdAt')
+    .exists().withMessage("createdAt is required")
+    .isString().withMessage("createdAt should be string")
+    .isISO8601({
+        strict: true,        // Строгая проверка
+        strictSeparator: true // Требует 'T' как разделитель
+    }).withMessage("createdAt should be DateTime in ISOString")
 export const postInputDtoValidation = [
     titleValidation,
     shortDescriptionValidation,
     contentValidation,
     blogIdValidation,
+    createdAtValidation,
 ];

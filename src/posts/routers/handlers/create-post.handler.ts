@@ -34,6 +34,7 @@ export function createPostHandler(req: Request<{},{},PostInputDto>, res: Respons
        content: req.body.content,
        blogId: req.body.blogId,
        blogName: blog.name,
+        createdAt: new Date().toISOString(),
    };
     postsRepository.createPost(newPost);
     res.status(HttpStatus.Created).send(newPost)
