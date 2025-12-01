@@ -1,42 +1,44 @@
 import {Request, Response} from "express";
 import {HttpStatus} from "../../../core/types/http-statuses";
 import {createErrorMessages} from "../../../core/utils/error.utils";
-// import {db} from "../../../db/in-memory.db";
 import {Blog} from "../../../blogs/types/blog";
 import {Post} from "../../types/post";
 import {PostInputDto} from "../../dto/post.input-dto";
 import {postInputDtoValidation} from "../../validation/postInputDtoValidation";
 import {blogsRepository} from "../../../blogs/repositories/blogs.repository";
 import {postsRepository} from "../../repositories/posts.repository";
+import {WithId} from "mongodb";
+import {mapToPostViewModelUtil} from "../mappers/map-to-post-view-model.utils";
+import {PostViewModel} from "../../types/post-view-model";
 
-export function createPostHandler(req: Request<{},{},PostInputDto>, res: Response) {
-   const errors = postInputDtoValidation(req.body);
-   if (errors.length > 0) {
-       res.status(HttpStatus.BadRequest).send(createErrorMessages(errors));
-       return;
+export async function createPostHandler(req: Request<{},{},PostInputDto>, res: Response) {
+   try{
+       const errors = postInputDtoValidation(req.body);
+       if (errors.length > 0) {
+           res.status(HttpStatus.BadRequest).send(createErrorMessages(errors));
+           return;
+       }
+
+       const blog: WithId<Blog> | null = await blogsRepository.findBlogById(req.body.blogId);
+       if (!blog) {
+           res.status(HttpStatus.BadRequest).send(createErrorMessages([{field: "blogId", message: "Blog not found"}]));
+           return;
+       }
+
+       const newPost: Post = {
+           title: req.body.title,
+           shortDescription: req.body.shortDescription,
+           content: req.body.content,
+           blogId: req.body.blogId,
+           blogName: blog.name,
+           createdAt: new Date().toISOString(),
+       };
+       const createdPost: WithId<Post> = await postsRepository.createPost(newPost);
+       const postViewModel: PostViewModel = mapToPostViewModelUtil(createdPost);
+       res.status(HttpStatus.Created).send(postViewModel)
+   } catch (e: unknown) {
+       res.status(HttpStatus.InternalServerError);
    }
 
-    const lastPostId = db.posts[db.posts.length - 1]?.id;
-    const newId = lastPostId
-        ? (parseInt(lastPostId) + 1).toString()
-        : "1";
-
-    const blog: Blog | null = blogsRepository.findBlogById(req.body.blogId);
-    if (!blog) {
-        res.status(HttpStatus.BadRequest).send(createErrorMessages([{field: "blogId", message: "Blog not found"}]));
-        return;
-    }
-
-    const newPost: Post = {
-       id: newId,
-       title: req.body.title,
-       shortDescription: req.body.shortDescription,
-       content: req.body.content,
-       blogId: req.body.blogId,
-       blogName: blog.name,
-        createdAt: new Date().toISOString(),
-   };
-    postsRepository.createPost(newPost);
-    res.status(HttpStatus.Created).send(newPost)
 }
 
