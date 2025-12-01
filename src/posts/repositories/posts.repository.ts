@@ -38,6 +38,9 @@ export const postsRepository = {
             throw new Error("Post not found.");
         }
         return;
-    }
+    },
+    async findPostsByBlogId(blogId: string): Promise<WithId<Post>[] | null> {
+      return await postCollection.find({blogId}).toArray(); //проверить не нужно ли переводить в формат монгоИД
+    },
 }
 
