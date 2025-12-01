@@ -6,6 +6,7 @@ import {HttpStatus} from "../../../src/core/types/http-statuses";
 import {generateBasicAuthToken} from "../../utils/generate-admin-auth-token";
 import {BLOGS_PATH} from "../../../src/core/paths/paths";
 import {clearDb} from "../../utils/clear-db";
+import {runDB} from "../../../src/db/mongo.bd";
 
 describe("Blogs API", () => {
     const app = express();
@@ -17,6 +18,7 @@ describe("Blogs API", () => {
         websiteUrl: "https://www.blogs.com/",
     };
     beforeAll(async () => {
+        await runDB('mongodb://0.0.0.0:27017/test')
         await clearDb(app);
     });
     it('should create blog; POST /ht_02/api/blogs', async () => {
