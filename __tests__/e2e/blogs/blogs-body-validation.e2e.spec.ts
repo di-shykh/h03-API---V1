@@ -5,22 +5,32 @@ import {BlogInputDto} from "../../../src/blogs/dto/blog.input-dto";
 import { HttpStatus } from '../../../src/core/types/http-statuses';
 import { generateBasicAuthToken } from '../../utils/generate-admin-auth-token';
 import { BLOGS_PATH } from '../../../src/core/paths/paths';
+import { getBlogDto } from '../../utils/blogs/get-blog-dto';
 import { clearDb } from '../../utils/clear-db';
-import {before} from "node:test";
+import { createBlog } from '../../utils/blogs/create-blog';
+import { getBlogById } from '../../utils/blogs/get-blog-by-id';
+import { runDB, stopDb } from '../../../src/db/mongo.bd';
+import {SETTINGS} from "../../../src/core/settings/settings";
 
 describe ('Blog API body validation check',() => {
     const app = express();
     setupApp(app);
     const adminToken: string = generateBasicAuthToken();
-    const correctTestBlogData: BlogInputDto = {
-        name: "Blog name",
-        description: "Blog description",
-        websiteUrl: "https://www.blogs.com/",
-    }
+    const correctTestBlogData: BlogInputDto = getBlogDto();
+
     beforeAll(async () => {
+        await runDB(SETTINGS.MONGO_URL)
         await clearDb(app);
     })
+    afterAll(async () => {
+        await stopDb();
+    })
     it('should not create blog when incorrect body passed; POST /api/blogs', async () => {
+        await request(app)
+            .post(BLOGS_PATH)
+            .send(correctTestBlogData)
+            .expect(HttpStatus.Unauthorized);
+
         const invalidDataSet1 = await request(app)
             .post(BLOGS_PATH)
             .set('Authorization', adminToken)
@@ -64,17 +74,10 @@ describe ('Blog API body validation check',() => {
         expect(blogResponse.body).toHaveLength(0);
     });
     it('should not update blog when incorrect data passed; PUT /api/blogs', async () => {
-        const {
-            body: {id:createdBlogId}
-        } = await request(app)
-            .post(BLOGS_PATH)
-            .set('Authorization', adminToken)
-            .send({...correctTestBlogData})
-            .expect(HttpStatus.Created);
-        console.log(createdBlogId);
+        const createdBlog = await createBlog(app);
 
         const invalidDataSet1 = await request(app)
-            .put(`${BLOGS_PATH}/${createdBlogId}`)
+            .put(`${BLOGS_PATH}/${createdBlog.id}`)
             .set('Authorization', adminToken)
             .send({
                 ...correctTestBlogData,
@@ -86,7 +89,7 @@ describe ('Blog API body validation check',() => {
         expect(invalidDataSet1.body.errorsMessages).toHaveLength(3);
 
         const invalidDataSet2 = await request(app)
-            .put(`${BLOGS_PATH}/${createdBlogId}`)
+            .put(`${BLOGS_PATH}/${createdBlog.id}`)
             .set('Authorization', adminToken)
             .send({
                 ...correctTestBlogData,
@@ -98,7 +101,7 @@ describe ('Blog API body validation check',() => {
         expect(invalidDataSet2.body.errorsMessages).toHaveLength(3);
 
         const invalidDataSet3 = await request(app)
-            .put(`${BLOGS_PATH}/${createdBlogId}`)
+            .put(`${BLOGS_PATH}/${createdBlog.id}`)
             .set('Authorization', adminToken)
             .send({
                 ...correctTestBlogData,
@@ -110,12 +113,10 @@ describe ('Blog API body validation check',() => {
         expect(invalidDataSet3.body.errorsMessages).toHaveLength(3);
 
         const blogResponse = await request(app)
-            .get(`${BLOGS_PATH}/${createdBlogId}`)
+            .get(`${BLOGS_PATH}/${createdBlog.id}`)
             .set('Authorization', adminToken)
         expect(blogResponse.body).toEqual({
-            ...correctTestBlogData,
-            id: createdBlogId,
-            name: correctTestBlogData.name,
+            ...createdBlog
         });
     });
 })

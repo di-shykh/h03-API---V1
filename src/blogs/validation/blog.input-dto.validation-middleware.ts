@@ -39,6 +39,6 @@ export const blogInputDtoValidation = [
     nameValidation,
     descriptionValidation,
     websiteUrlValidation,
-    createdAtValidation,
-    isMembershipValidation,
+    // createdAtValidation,
+    // isMembershipValidation,
 ];

@@ -22,8 +22,8 @@ const blogIdValidation = body("blogId")
     .isString().withMessage("blogId should be string")
     .trim()
     // .isNumeric().withMessage("blogId should be numeric")
-    .custom((id: string): boolean => {
-        const blog = blogsRepository.findBlogById(id);
+    .custom(async (id: string): Promise<boolean> => {
+        const blog = await blogsRepository.findBlogById(id);
         if (!blog) {
             throw new Error("blogId does not exist");
         }
@@ -41,5 +41,5 @@ export const postInputDtoValidation = [
     shortDescriptionValidation,
     contentValidation,
     blogIdValidation,
-    createdAtValidation,
+    // createdAtValidation,
 ];
