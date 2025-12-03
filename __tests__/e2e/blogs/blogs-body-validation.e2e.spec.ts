@@ -19,7 +19,7 @@ describe ('Blog API body validation check',() => {
     const correctTestBlogData: BlogInputDto = getBlogDto();
 
     beforeAll(async () => {
-        await runDB(SETTINGS.MONGO_URL)
+        await runDB(SETTINGS.MONGO_URL_TEST)
         await clearDb(app);
     })
     afterAll(async () => {

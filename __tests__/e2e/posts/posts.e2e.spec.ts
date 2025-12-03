@@ -21,7 +21,7 @@ describe("Posts API", () => {
     const adminToken: string = generateBasicAuthToken();
 
     beforeAll(async () => {
-        await runDB(SETTINGS.MONGO_URL);
+        await runDB(SETTINGS.MONGO_URL_TEST);
         await clearDb(app);
     });
     afterAll(async () => {
